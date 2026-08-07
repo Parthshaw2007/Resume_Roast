@@ -228,20 +228,67 @@ function Index() {
             className="mt-2 w-full rounded-lg border border-input bg-background px-4 py-3 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
           />
 
-          <label
-            htmlFor="resume"
-            className="mt-6 block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
-          >
-            Your resume text
-          </label>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <label
+              htmlFor="resume"
+              className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              Your resume text
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-input px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-secondary">
+              {pdfLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Upload className="h-3.5 w-3.5" />
+              )}
+              {pdfLoading ? "Reading PDF…" : "Upload PDF"}
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (!file) return;
+                  setPdfError(null);
+                  setPdfLoading(true);
+                  try {
+                    const { extractPdfText } = await import("@/lib/pdf-text");
+                    const text = await extractPdfText(file);
+                    if (text.length < 30) {
+                      setPdfError(
+                        "Is PDF me text nahi mila (shayad scanned image hai). Text paste kar dijiye.",
+                      );
+                    } else {
+                      setResume(text);
+                      setPdfName(file.name);
+                    }
+                  } catch {
+                    setPdfError("PDF padh nahi paaye. Dusri file try kijiye ya text paste kijiye.");
+                  } finally {
+                    setPdfLoading(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
           <textarea
             id="resume"
             value={resume}
             onChange={(e) => setResume(e.target.value)}
             rows={12}
-            placeholder="Paste the full text of your resume here…"
+            placeholder="Paste the full text of your resume here… ya upar se PDF upload kijiye"
             className="mt-2 w-full resize-y rounded-lg border border-input bg-background px-4 py-3 font-mono text-sm leading-relaxed outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
           />
+          {pdfName && !pdfError && (
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <FileText className="h-3.5 w-3.5" /> Imported from {pdfName}
+            </p>
+          )}
+          {pdfError && (
+            <p className="mt-2 text-xs text-destructive">{pdfError}</p>
+          )}
+
 
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <button
