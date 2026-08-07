@@ -17,6 +17,7 @@ import {
   ScanLine,
   PenLine,
   RotateCcw,
+  Upload,
 } from "lucide-react";
 import { reviewResume, type ReviewResult } from "@/lib/review.functions";
 
@@ -137,6 +138,9 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
 function Index() {
   const [resume, setResume] = useState("");
   const [role, setRole] = useState("");
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfName, setPdfName] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const call = useServerFn(reviewResume);
 
   const mutation = useMutation<ReviewResult, Error>({
