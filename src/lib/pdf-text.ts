@@ -16,7 +16,7 @@ export async function extractPdfText(file: File): Promise<string> {
     const lines: string[] = [];
     for (const item of content.items as Array<{ str: string; transform: number[] }>) {
       if (!("str" in item)) continue;
-      const y = item.transform[5];
+      const y = item.transform[5] ?? 0;
       if (lastY !== null && Math.abs(y - lastY) > 2) {
         lines.push(line.trim());
         line = "";
@@ -27,6 +27,5 @@ export async function extractPdfText(file: File): Promise<string> {
     if (line.trim()) lines.push(line.trim());
     pages.push(lines.filter(Boolean).join("\n"));
   }
-  await doc.destroy();
   return pages.join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
 }
