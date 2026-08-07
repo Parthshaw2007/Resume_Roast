@@ -184,3 +184,26 @@
 @utility hero-gradient {
   background-image: var(--gradient-hero);
 }
+
+@utility grid-veil {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 7%) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 7%) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@utility rise-in {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
