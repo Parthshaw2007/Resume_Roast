@@ -244,6 +244,41 @@ function Index() {
             className="mt-2 w-full rounded-lg border border-input bg-background px-4 py-3 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
           />
 
+          <div className="mt-6">
+            <label
+              htmlFor="company"
+              className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              Company (optional)
+            </label>
+            <input
+              id="company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="e.g. PayNest"
+              className="mt-2 w-full rounded-lg border border-input bg-background px-4 py-3 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
+            />
+          </div>
+
+          <div className="mt-6">
+            <label
+              htmlFor="jd"
+              className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              Job description (optional, but unlocks match score)
+            </label>
+            <textarea
+              id="jd"
+              value={jd}
+              onChange={(e) => setJd(e.target.value)}
+              rows={6}
+              placeholder="Paste the full job description here to compare your resume against it…"
+              className="mt-2 w-full resize-y rounded-lg border border-input bg-background px-4 py-3 text-sm leading-relaxed outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
+            />
+          </div>
+
+
+
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <label
               htmlFor="resume"
