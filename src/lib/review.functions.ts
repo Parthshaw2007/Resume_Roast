@@ -4,15 +4,20 @@ import { z } from "zod";
 const Input = z.object({
   resume: z.string().min(30, "Resume text is too short"),
   role: z.string().default(""),
+  jobDescription: z.string().default(""),
 });
 
 export type ReviewResult = {
   score: number;
+  match_score: number;
   summary: string;
   strengths: string[];
   weaknesses: string[];
   suggestions: { area: string; issue: string; fix: string }[];
   missing_keywords: string[];
+  missing_skills: string[];
+  evidence: { skill: string; section: string; quote: string; found: boolean }[];
+  interview_questions: { question: string; why: string }[];
   rewritten_bullets: { before: string; after: string }[];
 };
 
@@ -21,15 +26,24 @@ const schema = {
   additionalProperties: false,
   required: [
     "score",
+    "match_score",
     "summary",
     "strengths",
     "weaknesses",
     "suggestions",
     "missing_keywords",
+    "missing_skills",
+    "evidence",
+    "interview_questions",
     "rewritten_bullets",
   ],
   properties: {
-    score: { type: "number", description: "0-100 overall resume score" },
+    score: { type: "number", description: "0-100 overall resume quality score" },
+    match_score: {
+      type: "number",
+      description:
+        "0-100 match between resume and the job description. If no job description was given, repeat the overall score.",
+    },
     summary: { type: "string" },
     strengths: { type: "array", items: { type: "string" } },
     weaknesses: { type: "array", items: { type: "string" } },
@@ -47,6 +61,40 @@ const schema = {
       },
     },
     missing_keywords: { type: "array", items: { type: "string" } },
+    missing_skills: {
+      type: "array",
+      items: { type: "string" },
+      description: "Required skills from the job description absent from the resume",
+    },
+    evidence: {
+      type: "array",
+      description:
+        "For each key skill required by the job description, where it appears in the resume",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["skill", "section", "quote", "found"],
+        properties: {
+          skill: { type: "string" },
+          section: { type: "string", description: "Resume section, or 'Not found'" },
+          quote: { type: "string", description: "Exact supporting line, or empty" },
+          found: { type: "boolean" },
+        },
+      },
+    },
+    interview_questions: {
+      type: "array",
+      description: "Exactly 10 tailored interview questions",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["question", "why"],
+        properties: {
+          question: { type: "string" },
+          why: { type: "string", description: "Why an interviewer would ask this" },
+        },
+      },
+    },
     rewritten_bullets: {
       type: "array",
       items: {
@@ -82,7 +130,7 @@ export const reviewResume = createServerFn({ method: "POST" })
             content: [
               {
                 type: "input_text",
-                text: "You are a blunt, expert technical recruiter and resume coach. Review the resume critically for ATS-friendliness, impact metrics, clarity and relevance. Be specific, never generic.",
+                text: "You are a blunt, expert technical recruiter and job application copilot. Compare the resume against the job description: compute a match score, cite exact evidence lines for required skills, list missing skills/keywords, give concrete fixes, rewrite weak bullets, and write exactly 10 tailored interview questions. Be specific, never generic.",
               },
             ],
           },
@@ -91,7 +139,9 @@ export const reviewResume = createServerFn({ method: "POST" })
             content: [
               {
                 type: "input_text",
-                text: `Target role: ${data.role || "not specified"}\n\nResume:\n${data.resume}`,
+                text: `Target role: ${data.role || "not specified"}\n\nJob description:\n${
+                  data.jobDescription || "not provided"
+                }\n\nResume:\n${data.resume}`,
               },
             ],
           },

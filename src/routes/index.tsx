@@ -18,8 +18,15 @@ import {
   PenLine,
   RotateCcw,
   Upload,
+  Target,
+  Search,
+  MessageSquare,
+  XCircle,
+  BookmarkPlus,
 } from "lucide-react";
 import { reviewResume, type ReviewResult } from "@/lib/review.functions";
+import { ApplicationTracker, addApplication } from "@/components/ApplicationTracker";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -138,14 +145,19 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
 function Index() {
   const [resume, setResume] = useState("");
   const [role, setRole] = useState("");
+  const [jd, setJd] = useState("");
+  const [company, setCompany] = useState("");
+  const [saved, setSaved] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const call = useServerFn(reviewResume);
 
   const mutation = useMutation<ReviewResult, Error>({
-    mutationFn: () => call({ data: { resume, role } }),
+    mutationFn: () => call({ data: { resume, role, jobDescription: jd } }),
+    onMutate: () => setSaved(false),
   });
+
 
   const result = mutation.data;
   const words = resume.trim() ? resume.trim().split(/\s+/).length : 0;
@@ -231,6 +243,41 @@ function Index() {
             placeholder="e.g. Backend Engineer at a fintech startup"
             className="mt-2 w-full rounded-lg border border-input bg-background px-4 py-3 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
           />
+
+          <div className="mt-6">
+            <label
+              htmlFor="company"
+              className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              Company (optional)
+            </label>
+            <input
+              id="company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="e.g. PayNest"
+              className="mt-2 w-full rounded-lg border border-input bg-background px-4 py-3 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
+            />
+          </div>
+
+          <div className="mt-6">
+            <label
+              htmlFor="jd"
+              className="block text-xs font-semibold uppercase tracking-widest text-muted-foreground"
+            >
+              Job description (optional, but unlocks match score)
+            </label>
+            <textarea
+              id="jd"
+              value={jd}
+              onChange={(e) => setJd(e.target.value)}
+              rows={6}
+              placeholder="Paste the full job description here to compare your resume against it…"
+              className="mt-2 w-full resize-y rounded-lg border border-input bg-background px-4 py-3 text-sm leading-relaxed outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
+            />
+          </div>
+
+
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <label
@@ -373,6 +420,86 @@ function Index() {
               </div>
             </section>
 
+            {jd.trim().length > 0 && (
+              <section className="surface-card rise-in flex flex-col items-center gap-6 p-6 sm:flex-row sm:p-8">
+                <ScoreRing score={result.match_score} />
+                <div className="flex-1">
+                  <h2 className="flex items-center gap-2 text-xl font-bold">
+                    <Target className="h-5 w-5 text-accent" /> Job match score
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    How well this resume matches the job description you pasted.
+                  </p>
+                  {result.missing_skills.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        Required skills missing
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {result.missing_skills.map((s, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    disabled={saved}
+                    onClick={() => {
+                      addApplication({
+                        company: company.trim() || "Untitled company",
+                        role: role.trim(),
+                        status: "Applied",
+                        matchScore: result.match_score,
+                      });
+                      setSaved(true);
+                    }}
+                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold transition-colors hover:bg-secondary disabled:opacity-60"
+                  >
+                    <BookmarkPlus className="h-4 w-4" />
+                    {saved ? "Saved to tracker" : "Save to tracker"}
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {result.evidence.length > 0 && (
+              <Section icon={<Search className="h-4 w-4" />} title="Skill evidence">
+                <div className="space-y-3">
+                  {result.evidence.map((e, i) => (
+                    <div
+                      key={i}
+                      className="flex gap-3 rounded-lg border border-border bg-muted/40 p-4"
+                    >
+                      {e.found ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                      ) : (
+                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold">{e.skill}</p>
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                          {e.section}
+                        </p>
+                        {e.quote && (
+                          <p className="mt-2 border-l-2 border-accent/50 pl-3 text-sm italic text-muted-foreground">
+                            “{e.quote}”
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+
+
             <div className="grid gap-6 md:grid-cols-2">
               <Section icon={<CheckCircle2 className="h-4 w-4 text-success" />} title="What works">
                 <ul className="space-y-2 text-sm leading-relaxed">
@@ -451,6 +578,30 @@ function Index() {
               </Section>
             )}
 
+            {result.interview_questions.length > 0 && (
+              <Section
+                icon={<MessageSquare className="h-4 w-4" />}
+                title="Interview questions to expect"
+              >
+                <ol className="space-y-3">
+                  {result.interview_questions.map((q, i) => (
+                    <li key={i} className="rounded-lg border border-border bg-muted/40 p-4">
+                      <p className="text-sm font-semibold">
+                        {i + 1}. {q.question}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">{q.why}</p>
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-4">
+                  <CopyButton
+                    text={result.interview_questions.map((q, i) => `${i + 1}. ${q.question}`).join("\n")}
+                    label="Copy all questions"
+                  />
+                </div>
+              </Section>
+            )}
+
             <div className="flex justify-center pt-2">
               <button
                 onClick={() => mutation.reset()}
@@ -461,7 +612,12 @@ function Index() {
             </div>
           </div>
         )}
+
+        <div className="mt-14">
+          <ApplicationTracker />
+        </div>
       </div>
+
 
       <footer className="border-t border-border bg-secondary/40">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
