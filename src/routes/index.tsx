@@ -578,6 +578,30 @@ function Index() {
               </Section>
             )}
 
+            {result.interview_questions.length > 0 && (
+              <Section
+                icon={<MessageSquare className="h-4 w-4" />}
+                title="Interview questions to expect"
+              >
+                <ol className="space-y-3">
+                  {result.interview_questions.map((q, i) => (
+                    <li key={i} className="rounded-lg border border-border bg-muted/40 p-4">
+                      <p className="text-sm font-semibold">
+                        {i + 1}. {q.question}
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">{q.why}</p>
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-4">
+                  <CopyButton
+                    text={result.interview_questions.map((q, i) => `${i + 1}. ${q.question}`).join("\n")}
+                    label="Copy all questions"
+                  />
+                </div>
+              </Section>
+            )}
+
             <div className="flex justify-center pt-2">
               <button
                 onClick={() => mutation.reset()}
@@ -588,7 +612,12 @@ function Index() {
             </div>
           </div>
         )}
+
+        <div className="mt-14">
+          <ApplicationTracker />
+        </div>
       </div>
+
 
       <footer className="border-t border-border bg-secondary/40">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-2 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
