@@ -18,8 +18,15 @@ import {
   PenLine,
   RotateCcw,
   Upload,
+  Target,
+  Search,
+  MessageSquare,
+  XCircle,
+  BookmarkPlus,
 } from "lucide-react";
 import { reviewResume, type ReviewResult } from "@/lib/review.functions";
+import { ApplicationTracker, addApplication } from "@/components/ApplicationTracker";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
