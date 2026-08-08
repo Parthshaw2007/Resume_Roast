@@ -145,14 +145,19 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
 function Index() {
   const [resume, setResume] = useState("");
   const [role, setRole] = useState("");
+  const [jd, setJd] = useState("");
+  const [company, setCompany] = useState("");
+  const [saved, setSaved] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const call = useServerFn(reviewResume);
 
   const mutation = useMutation<ReviewResult, Error>({
-    mutationFn: () => call({ data: { resume, role } }),
+    mutationFn: () => call({ data: { resume, role, jobDescription: jd } }),
+    onMutate: () => setSaved(false),
   });
+
 
   const result = mutation.data;
   const words = resume.trim() ? resume.trim().split(/\s+/).length : 0;
