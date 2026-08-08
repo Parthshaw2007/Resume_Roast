@@ -420,6 +420,86 @@ function Index() {
               </div>
             </section>
 
+            {jd.trim().length > 0 && (
+              <section className="surface-card rise-in flex flex-col items-center gap-6 p-6 sm:flex-row sm:p-8">
+                <ScoreRing score={result.match_score} />
+                <div className="flex-1">
+                  <h2 className="flex items-center gap-2 text-xl font-bold">
+                    <Target className="h-5 w-5 text-accent" /> Job match score
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    How well this resume matches the job description you pasted.
+                  </p>
+                  {result.missing_skills.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        Required skills missing
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {result.missing_skills.map((s, i) => (
+                          <span
+                            key={i}
+                            className="rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-xs font-medium text-destructive"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    disabled={saved}
+                    onClick={() => {
+                      addApplication({
+                        company: company.trim() || "Untitled company",
+                        role: role.trim(),
+                        status: "Applied",
+                        matchScore: result.match_score,
+                      });
+                      setSaved(true);
+                    }}
+                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold transition-colors hover:bg-secondary disabled:opacity-60"
+                  >
+                    <BookmarkPlus className="h-4 w-4" />
+                    {saved ? "Saved to tracker" : "Save to tracker"}
+                  </button>
+                </div>
+              </section>
+            )}
+
+            {result.evidence.length > 0 && (
+              <Section icon={<Search className="h-4 w-4" />} title="Skill evidence">
+                <div className="space-y-3">
+                  {result.evidence.map((e, i) => (
+                    <div
+                      key={i}
+                      className="flex gap-3 rounded-lg border border-border bg-muted/40 p-4"
+                    >
+                      {e.found ? (
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                      ) : (
+                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold">{e.skill}</p>
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                          {e.section}
+                        </p>
+                        {e.quote && (
+                          <p className="mt-2 border-l-2 border-accent/50 pl-3 text-sm italic text-muted-foreground">
+                            “{e.quote}”
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+
+
             <div className="grid gap-6 md:grid-cols-2">
               <Section icon={<CheckCircle2 className="h-4 w-4 text-success" />} title="What works">
                 <ul className="space-y-2 text-sm leading-relaxed">
