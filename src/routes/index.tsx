@@ -65,18 +65,18 @@ B.Tech Computer Science, VIT Vellore, 2020`;
 const STEPS = [
   {
     icon: PenLine,
-    title: "Paste karo",
-    body: "Resume ka text aur target role daalo — koi signup, koi upload nahi.",
+    title: "Paste it in",
+    body: "Add your resume text and target role — no signup, no upload required.",
   },
   {
     icon: ScanLine,
-    title: "AI scan karta hai",
-    body: "ATS keywords, impact metrics, clarity aur relevance line by line check hote hain.",
+    title: "AI scans it",
+    body: "ATS keywords, impact metrics, clarity and relevance are checked line by line.",
   },
   {
     icon: Gauge,
     title: "Score + fixes",
-    body: "Ek honest score, kamiyon ki list aur ready-to-paste rewritten bullets.",
+    body: "An honest score, a list of weak spots and ready-to-paste rewritten bullets.",
   },
 ];
 
@@ -261,14 +261,14 @@ function Index() {
                     const text = await extractPdfText(file);
                     if (text.length < 30) {
                       setPdfError(
-                        "Is PDF me text nahi mila (shayad scanned image hai). Text paste kar dijiye.",
+                        "No text found in this PDF (it may be a scanned image). Please paste the text instead.",
                       );
                     } else {
                       setResume(text);
                       setPdfName(file.name);
                     }
                   } catch {
-                    setPdfError("PDF padh nahi paaye. Dusri file try kijiye ya text paste kijiye.");
+                    setPdfError("Could not read the PDF. Try another file or paste the text.");
                   } finally {
                     setPdfLoading(false);
                   }
@@ -281,7 +281,7 @@ function Index() {
             value={resume}
             onChange={(e) => setResume(e.target.value)}
             rows={12}
-            placeholder="Paste the full text of your resume here… ya upar se PDF upload kijiye"
+            placeholder="Paste the full text of your resume here… or upload a PDF above"
             className="mt-2 w-full resize-y rounded-lg border border-input bg-background px-4 py-3 font-mono text-sm leading-relaxed outline-none transition-shadow focus:ring-2 focus:ring-ring/40"
           />
           {pdfName && !pdfError && (
@@ -327,7 +327,7 @@ function Index() {
                 />
               ))}
               <p className="text-xs text-muted-foreground">
-                AI aapka resume line by line padh raha hai…
+                AI is reading your resume line by line…
               </p>
             </div>
           )}
