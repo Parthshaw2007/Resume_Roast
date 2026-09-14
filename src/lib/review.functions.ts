@@ -7,10 +7,30 @@ const Input = z.object({
   jobDescription: z.string().default(""),
 });
 
+export type ReqStatus = "Strong Match" | "Partial Match" | "Missing";
+
 export type ReviewResult = {
   score: number;
   match_score: number;
+  match_summary: string;
   summary: string;
+  subscores: {
+    skills_match: number;
+    keyword_match: number;
+    experience_relevance: number;
+    evidence_strength: number;
+    resume_clarity: number;
+  };
+  requirements: {
+    requirement: string;
+    evidence: string;
+    status: ReqStatus;
+  }[];
+  missing_requirements: {
+    requirement: string;
+    job_asks: string;
+    advice: string;
+  }[];
   strengths: string[];
   weaknesses: string[];
   suggestions: { area: string; issue: string; fix: string }[];
@@ -18,7 +38,7 @@ export type ReviewResult = {
   missing_skills: string[];
   evidence: { skill: string; section: string; quote: string; found: boolean }[];
   interview_questions: { question: string; why: string }[];
-  rewritten_bullets: { before: string; after: string }[];
+  rewritten_bullets: { before: string; after: string; reasons: string[] }[];
 };
 
 const schema = {
@@ -27,7 +47,11 @@ const schema = {
   required: [
     "score",
     "match_score",
+    "match_summary",
     "summary",
+    "subscores",
+    "requirements",
+    "missing_requirements",
     "strengths",
     "weaknesses",
     "suggestions",
@@ -44,7 +68,67 @@ const schema = {
       description:
         "0-100 match between resume and the job description. If no job description was given, repeat the overall score.",
     },
+    match_summary: {
+      type: "string",
+      description:
+        "2 sentences explaining why the match is high or low, naming specific requirements that are or aren't supported by the resume. Empty string if no job description.",
+    },
     summary: { type: "string" },
+    subscores: {
+      type: "object",
+      additionalProperties: false,
+      required: [
+        "skills_match",
+        "keyword_match",
+        "experience_relevance",
+        "evidence_strength",
+        "resume_clarity",
+      ],
+      properties: {
+        skills_match: { type: "number" },
+        keyword_match: { type: "number" },
+        experience_relevance: { type: "number" },
+        evidence_strength: { type: "number" },
+        resume_clarity: { type: "number" },
+      },
+    },
+    requirements: {
+      type: "array",
+      description:
+        "Every important requirement extracted from the job description, mapped to evidence found ONLY in the resume. Empty array if no job description was provided.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["requirement", "evidence", "status"],
+        properties: {
+          requirement: { type: "string" },
+          evidence: {
+            type: "string",
+            description:
+              "Exact or near-exact line from the resume proving it, or 'No relevant evidence found', or an explanation like 'Mentioned in skills but no project evidence'.",
+          },
+          status: { type: "string", enum: ["Strong Match", "Partial Match", "Missing"] },
+        },
+      },
+    },
+    missing_requirements: {
+      type: "array",
+      description: "Requirements with status Missing, explained honestly.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["requirement", "job_asks", "advice"],
+        properties: {
+          requirement: { type: "string" },
+          job_asks: { type: "string", description: "What the job description asks for" },
+          advice: {
+            type: "string",
+            description:
+              "Conditional advice, e.g. 'If you have worked with REST APIs, add the relevant project'. Never tell the user to add something they may not have done.",
+          },
+        },
+      },
+    },
     strengths: { type: "array", items: { type: "string" } },
     weaknesses: { type: "array", items: { type: "string" } },
     suggestions: {
@@ -100,12 +184,39 @@ const schema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["before", "after"],
-        properties: { before: { type: "string" }, after: { type: "string" } },
+        required: ["before", "after", "reasons"],
+        properties: {
+          before: { type: "string" },
+          after: {
+            type: "string",
+            description:
+              "Improved bullet using ONLY facts present in the original. Never invent metrics. If a metric would help but none exists, end with '(Add a metric if you have one.)'",
+          },
+          reasons: {
+            type: "array",
+            description: "2-4 short reasons why the rewrite is better",
+            items: { type: "string" },
+          },
+        },
       },
     },
   },
 } as const;
+
+const SYSTEM = `You are ResumeRoast, an evidence-based resume-to-job matching engine.
+
+Hard rules:
+- NEVER invent skills, experience, projects, achievements, companies, dates or metrics that are not in the resume.
+- Every piece of "evidence" must be a quote or close paraphrase of text that actually appears in the resume. If there is none, say "No relevant evidence found".
+- A skill listed only in a skills list, with no project or job backing it, is a Partial Match ("Mentioned in skills but no project evidence"), never a Strong Match.
+- Rewritten bullets may only restate facts already in the original bullet. If a number would strengthen it and none exists, append "(Add a metric if you have one.)".
+- Advice for missing requirements must be conditional: "If you have done X, add it." Never instruct the user to claim something.
+
+If a job description is provided: extract every important requirement (skills, tools, responsibilities, experience level) and map each one to resume evidence with status Strong Match / Partial Match / Missing. Compute match_score from that mapping and explain it in match_summary.
+
+If NO job description is provided: set match_score equal to score, match_summary to an empty string, and leave requirements and missing_requirements as empty arrays. Still deliver a full resume quality analysis.
+
+Be blunt, specific and concrete. Never generic filler.`;
 
 export const reviewResume = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => Input.parse(data))
@@ -127,12 +238,7 @@ export const reviewResume = createServerFn({ method: "POST" })
         input: [
           {
             role: "system",
-            content: [
-              {
-                type: "input_text",
-                text: "You are a blunt, expert technical recruiter and job application copilot. Compare the resume against the job description: compute a match score, cite exact evidence lines for required skills, list missing skills/keywords, give concrete fixes, rewrite weak bullets, and write exactly 10 tailored interview questions. Be specific, never generic.",
-              },
-            ],
+            content: [{ type: "input_text", text: SYSTEM }],
           },
           {
             role: "user",
