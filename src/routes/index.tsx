@@ -191,8 +191,7 @@ function Index() {
               Get your resume roasted, then fixed.
             </h1>
             <p className="mt-4 max-w-xl text-base text-primary-foreground/80">
-              Paste your resume, pick a target role, and get an honest score with concrete rewrites
-              in seconds.
+              See exactly how well your resume proves you're qualified for the job.
             </p>
             <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-primary-foreground/20 pt-6">
               {[
