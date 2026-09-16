@@ -676,7 +676,13 @@ function Index() {
                       className="rounded-lg border border-destructive/25 bg-destructive/5 p-4"
                     >
                       <p className="text-sm font-semibold">{m.requirement}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{m.job_asks}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">The job asks for: </span>
+                        {m.job_asks}
+                      </p>
+                      {m.finding && (
+                        <p className="mt-1.5 text-sm italic text-muted-foreground">{m.finding}</p>
+                      )}
                       <p className="mt-2 flex gap-2 text-sm">
                         <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
                         {m.advice}
