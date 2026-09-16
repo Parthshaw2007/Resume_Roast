@@ -97,6 +97,7 @@ const schema = {
         "skills_match",
         "keyword_match",
         "experience_relevance",
+        "education_match",
         "evidence_strength",
         "resume_clarity",
       ],
@@ -104,8 +105,29 @@ const schema = {
         skills_match: { type: "number" },
         keyword_match: { type: "number" },
         experience_relevance: { type: "number" },
+        education_match: {
+          type: "number",
+          description:
+            "0-100 how well the resume's education/certifications meet what the job requires. If the job states no education requirement, use 100.",
+        },
         evidence_strength: { type: "number" },
         resume_clarity: { type: "number" },
+      },
+    },
+    score_breakdown: {
+      type: "array",
+      description:
+        "Exactly the 5 scoring categories with fixed weights: Skills match 30, Experience relevance 25, Evidence strength 20, Education 15, Keywords 10. score is that category's 0-100 value. Empty array if no job description.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["category", "weight", "score", "note"],
+        properties: {
+          category: { type: "string" },
+          weight: { type: "number", description: "Percentage weight, e.g. 30" },
+          score: { type: "number", description: "0-100 score for this category" },
+          note: { type: "string", description: "One short sentence justifying this category score" },
+        },
       },
     },
     requirements: {
@@ -115,13 +137,22 @@ const schema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["requirement", "evidence", "status"],
+        required: ["requirement", "evidence", "reason", "critical", "status"],
         properties: {
-          requirement: { type: "string" },
+          requirement: { type: "string", description: "Short label, e.g. 'Python' or '3+ years backend experience'" },
           evidence: {
             type: "string",
             description:
-              "Exact or near-exact line from the resume proving it, or 'No relevant evidence found', or an explanation like 'Mentioned in skills but no project evidence'.",
+              "Exact or near-exact line from the resume proving it, or 'No evidence found in the provided resume.'",
+          },
+          reason: {
+            type: "string",
+            description:
+              "One or two sentences explaining why this was classified Strong Match / Partial Match / Missing.",
+          },
+          critical: {
+            type: "boolean",
+            description: "True if the job lists this as required/must-have rather than nice-to-have.",
           },
           status: { type: "string", enum: ["Strong Match", "Partial Match", "Missing"] },
         },
@@ -133,10 +164,15 @@ const schema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["requirement", "job_asks", "advice"],
+        required: ["requirement", "job_asks", "finding", "advice"],
         properties: {
           requirement: { type: "string" },
           job_asks: { type: "string", description: "What the job description asks for" },
+          finding: {
+            type: "string",
+            description:
+              "Strictly a statement about the document, never about the person. E.g. 'No Python experience or evidence was found in the provided resume.' Never write 'You don't know Python'.",
+          },
           advice: {
             type: "string",
             description:
