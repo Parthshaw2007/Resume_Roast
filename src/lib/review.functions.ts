@@ -18,17 +18,27 @@ export type ReviewResult = {
     skills_match: number;
     keyword_match: number;
     experience_relevance: number;
+    education_match: number;
     evidence_strength: number;
     resume_clarity: number;
   };
+  score_breakdown: {
+    category: string;
+    weight: number;
+    score: number;
+    note: string;
+  }[];
   requirements: {
     requirement: string;
     evidence: string;
+    reason: string;
+    critical: boolean;
     status: ReqStatus;
   }[];
   missing_requirements: {
     requirement: string;
     job_asks: string;
+    finding: string;
     advice: string;
   }[];
   strengths: string[];
@@ -38,7 +48,12 @@ export type ReviewResult = {
   missing_skills: string[];
   evidence: { skill: string; section: string; quote: string; found: boolean }[];
   interview_questions: { question: string; why: string }[];
-  rewritten_bullets: { before: string; after: string; reasons: string[] }[];
+  rewritten_bullets: {
+    before: string;
+    after: string;
+    reasons: string[];
+    job_relevance: string;
+  }[];
 };
 
 const schema = {
@@ -50,6 +65,7 @@ const schema = {
     "match_summary",
     "summary",
     "subscores",
+    "score_breakdown",
     "requirements",
     "missing_requirements",
     "strengths",
@@ -81,6 +97,7 @@ const schema = {
         "skills_match",
         "keyword_match",
         "experience_relevance",
+        "education_match",
         "evidence_strength",
         "resume_clarity",
       ],
@@ -88,8 +105,29 @@ const schema = {
         skills_match: { type: "number" },
         keyword_match: { type: "number" },
         experience_relevance: { type: "number" },
+        education_match: {
+          type: "number",
+          description:
+            "0-100 how well the resume's education/certifications meet what the job requires. If the job states no education requirement, use 100.",
+        },
         evidence_strength: { type: "number" },
         resume_clarity: { type: "number" },
+      },
+    },
+    score_breakdown: {
+      type: "array",
+      description:
+        "Exactly the 5 scoring categories with fixed weights: Skills match 30, Experience relevance 25, Evidence strength 20, Education 15, Keywords 10. score is that category's 0-100 value. Empty array if no job description.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["category", "weight", "score", "note"],
+        properties: {
+          category: { type: "string" },
+          weight: { type: "number", description: "Percentage weight, e.g. 30" },
+          score: { type: "number", description: "0-100 score for this category" },
+          note: { type: "string", description: "One short sentence justifying this category score" },
+        },
       },
     },
     requirements: {
@@ -99,13 +137,22 @@ const schema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["requirement", "evidence", "status"],
+        required: ["requirement", "evidence", "reason", "critical", "status"],
         properties: {
-          requirement: { type: "string" },
+          requirement: { type: "string", description: "Short label, e.g. 'Python' or '3+ years backend experience'" },
           evidence: {
             type: "string",
             description:
-              "Exact or near-exact line from the resume proving it, or 'No relevant evidence found', or an explanation like 'Mentioned in skills but no project evidence'.",
+              "Exact or near-exact line from the resume proving it, or 'No evidence found in the provided resume.'",
+          },
+          reason: {
+            type: "string",
+            description:
+              "One or two sentences explaining why this was classified Strong Match / Partial Match / Missing.",
+          },
+          critical: {
+            type: "boolean",
+            description: "True if the job lists this as required/must-have rather than nice-to-have.",
           },
           status: { type: "string", enum: ["Strong Match", "Partial Match", "Missing"] },
         },
@@ -117,10 +164,15 @@ const schema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["requirement", "job_asks", "advice"],
+        required: ["requirement", "job_asks", "finding", "advice"],
         properties: {
           requirement: { type: "string" },
           job_asks: { type: "string", description: "What the job description asks for" },
+          finding: {
+            type: "string",
+            description:
+              "Strictly a statement about the document, never about the person. E.g. 'No Python experience or evidence was found in the provided resume.' Never write 'You don't know Python'.",
+          },
           advice: {
             type: "string",
             description:
@@ -184,18 +236,23 @@ const schema = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["before", "after", "reasons"],
+        required: ["before", "after", "reasons", "job_relevance"],
         properties: {
           before: { type: "string" },
           after: {
             type: "string",
             description:
-              "Improved bullet using ONLY facts present in the original. Never invent metrics. If a metric would help but none exists, end with '(Add a metric if you have one.)'",
+              "Improved bullet using ONLY facts present in the original. Never change the domain of the work. Never invent metrics. If a metric would help but none exists, end with '(Add a metric if you have one.)'",
           },
           reasons: {
             type: "array",
-            description: "2-4 short reasons why the rewrite is better",
+            description: "2-4 short reasons why the rewrite is better (writing quality only)",
             items: { type: "string" },
+          },
+          job_relevance: {
+            type: "string",
+            description:
+              "If the bullet does not provide evidence for the target role, state it plainly, e.g. 'This bullet does not provide evidence of software engineering experience.' Empty string if the bullet is relevant to the target role.",
           },
         },
       },
@@ -207,14 +264,34 @@ const SYSTEM = `You are ResumeRoast, an evidence-based resume-to-job matching en
 
 Hard rules:
 - NEVER invent skills, experience, projects, achievements, companies, dates or metrics that are not in the resume.
-- Every piece of "evidence" must be a quote or close paraphrase of text that actually appears in the resume. If there is none, say "No relevant evidence found".
+- Every piece of "evidence" must be a quote or close paraphrase of text that actually appears in the resume. If there is none, write "No evidence found in the provided resume."
 - A skill listed only in a skills list, with no project or job backing it, is a Partial Match ("Mentioned in skills but no project evidence"), never a Strong Match.
-- Rewritten bullets may only restate facts already in the original bullet. If a number would strengthen it and none exists, append "(Add a metric if you have one.)".
+- Statements about gaps describe the DOCUMENT, never the person. Write "No Python experience or evidence was found in the provided resume." Never write "You don't know Python".
 - Advice for missing requirements must be conditional: "If you have done X, add it." Never instruct the user to claim something.
 
-If a job description is provided: extract every important requirement (skills, tools, responsibilities, experience level) and map each one to resume evidence with status Strong Match / Partial Match / Missing. Compute match_score from that mapping and explain it in match_summary.
+BULLET REWRITES:
+- Rewrites improve WRITING QUALITY only: clarity, stronger verbs, specificity of what is already stated. Facts, domain and scope must stay identical.
+- NEVER transform healthcare into software, administrative into technical, or non-technical into programming work. Never introduce programming languages, tools, APIs, projects, metrics or engineering responsibilities.
+- If the bullet is from a different domain than the target role, still improve the wording, and set job_relevance to a plain statement that the bullet does not provide evidence for the target role. Otherwise job_relevance is an empty string.
+- If a number would strengthen the bullet and none exists, append "(Add a metric if you have one.)".
 
-If NO job description is provided: set match_score equal to score, match_summary to an empty string, and leave requirements and missing_requirements as empty arrays. Still deliver a full resume quality analysis.
+SCORING (with a job description):
+Extract every important requirement (required skills, required education/certifications, relevant experience, required technical knowledge, job-specific keywords) and map each to resume evidence with status Strong Match / Partial Match / Missing, marking critical=true for must-haves.
+Compute the weighted match_score using exactly these weights and report them in score_breakdown:
+- Skills match 30%
+- Experience relevance 25%
+- Evidence strength 20%
+- Education 15%
+- Keywords 10%
+match_score must equal the rounded weighted average of those five category scores (score_breakdown must be internally consistent with match_score, within 2 points).
+Scoring discipline:
+- Every critical requirement with status Missing must pull the relevant category scores down sharply; if most critical requirements are Missing, match_score must be below 30.
+- A keyword or skill-list mention with no supporting evidence counts as Partial at best and contributes little.
+- Overlapping generic soft skills, unrelated buzzwords or domain-irrelevant experience must NOT raise the score.
+- Never inflate. A resume from a different field targeting this job should score low, and match_summary must say so plainly.
+
+If NO job description is provided: set match_score equal to score, match_summary to an empty string, and leave requirements, missing_requirements and score_breakdown as empty arrays. Still deliver a full resume quality analysis.
+
 
 Be blunt, specific and concrete. Never generic filler.`;
 
