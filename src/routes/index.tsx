@@ -796,7 +796,7 @@ function Index() {
                       {b.reasons?.length > 0 && (
                         <>
                           <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                            Why this is better
+                            Writing quality — why this is better
                           </p>
                           <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
                             {b.reasons.map((r, j) => (
@@ -807,6 +807,17 @@ function Index() {
                             ))}
                           </ul>
                         </>
+                      )}
+                      {b.job_relevance?.trim() && (
+                        <div className="mt-4 flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                              Job relevance
+                            </p>
+                            <p className="mt-0.5 text-sm">{b.job_relevance}</p>
+                          </div>
+                        </div>
                       )}
                     </div>
                   ))}
