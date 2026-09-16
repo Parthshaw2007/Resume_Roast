@@ -627,6 +627,7 @@ function Index() {
                   label="Experience relevance"
                   value={result.subscores?.experience_relevance ?? 0}
                 />
+                <MeterCard label="Education" value={result.subscores?.education_match ?? 0} />
                 <MeterCard
                   label="Evidence strength"
                   value={result.subscores?.evidence_strength ?? 0}
@@ -634,6 +635,12 @@ function Index() {
                 <MeterCard label="Resume clarity" value={result.subscores?.resume_clarity ?? 0} />
                 {!hasJd && <MeterCard label="Resume quality" value={result.score} primary />}
               </div>
+              {hasJd && (
+                <ScoreBreakdown
+                  breakdown={result.score_breakdown ?? []}
+                  matchScore={result.match_score}
+                />
+              )}
             </Section>
 
             {reqs.length > 0 && (
