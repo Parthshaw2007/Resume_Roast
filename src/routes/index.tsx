@@ -226,6 +226,115 @@ function StatusChip({ status }: { status: ReqStatus }) {
   );
 }
 
+function RequirementCard({ req }: { req: ReviewResult["requirements"][number] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-muted/40">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted"
+      >
+        <ChevronRight
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+            open ? "rotate-90" : ""
+          }`}
+        />
+        <span className="min-w-0 flex-1 text-sm font-semibold">
+          {req.requirement}
+          {req.critical && (
+            <span className="ml-2 rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Required
+            </span>
+          )}
+        </span>
+        <StatusChip status={req.status} />
+      </button>
+      {open && (
+        <div className="space-y-3 border-t border-border px-4 py-3.5">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Resume evidence
+            </p>
+            <p
+              className={`mt-1 text-sm ${
+                req.status === "Missing"
+                  ? "italic text-muted-foreground"
+                  : "border-l-2 border-accent/50 pl-3 text-muted-foreground"
+              }`}
+            >
+              {req.status === "Missing" ? req.evidence : `“${req.evidence}”`}
+            </p>
+          </div>
+          {req.reason && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Why {req.status.toLowerCase()}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{req.reason}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScoreBreakdown({
+  breakdown,
+  matchScore,
+}: {
+  breakdown: ReviewResult["score_breakdown"];
+  matchScore: number;
+}) {
+  const [open, setOpen] = useState(false);
+  if (!breakdown?.length) return null;
+  return (
+    <div className="mt-4 rounded-xl border border-border bg-muted/30">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold transition-colors hover:bg-muted"
+      >
+        <ChevronRight
+          className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+        />
+        How this score was calculated
+      </button>
+      {open && (
+        <div className="border-t border-border px-4 py-4">
+          <ul className="space-y-3">
+            {breakdown.map((b, i) => (
+              <li key={i}>
+                <div className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium">
+                    {b.category}{" "}
+                    <span className="text-muted-foreground">— {Math.round(b.weight)}%</span>
+                  </span>
+                  <span className="font-display font-bold">{Math.round(b.score)}%</span>
+                </div>
+                <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-border">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${Math.max(0, Math.min(100, Math.round(b.score)))}%` }}
+                  />
+                </div>
+                {b.note && <p className="mt-1 text-xs text-muted-foreground">{b.note}</p>}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
+            Weighted total — Job match {Math.round(matchScore)}%. Missing required items lower the
+            categories they belong to; keywords without supporting evidence count only partially.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LoadingSteps() {
   const [step, setStep] = useState(0);
   useEffect(() => {
