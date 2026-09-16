@@ -27,6 +27,7 @@ import {
   MinusCircle,
   Circle,
   ListChecks,
+  ChevronRight,
 } from "lucide-react";
 import { reviewResume, type ReviewResult, type ReqStatus } from "@/lib/review.functions";
 import { ApplicationTracker, addApplication } from "@/components/ApplicationTracker";
