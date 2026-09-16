@@ -65,6 +65,7 @@ const schema = {
     "match_summary",
     "summary",
     "subscores",
+    "score_breakdown",
     "requirements",
     "missing_requirements",
     "strengths",
