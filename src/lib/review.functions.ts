@@ -18,17 +18,27 @@ export type ReviewResult = {
     skills_match: number;
     keyword_match: number;
     experience_relevance: number;
+    education_match: number;
     evidence_strength: number;
     resume_clarity: number;
   };
+  score_breakdown: {
+    category: string;
+    weight: number;
+    score: number;
+    note: string;
+  }[];
   requirements: {
     requirement: string;
     evidence: string;
+    reason: string;
+    critical: boolean;
     status: ReqStatus;
   }[];
   missing_requirements: {
     requirement: string;
     job_asks: string;
+    finding: string;
     advice: string;
   }[];
   strengths: string[];
@@ -38,7 +48,12 @@ export type ReviewResult = {
   missing_skills: string[];
   evidence: { skill: string; section: string; quote: string; found: boolean }[];
   interview_questions: { question: string; why: string }[];
-  rewritten_bullets: { before: string; after: string; reasons: string[] }[];
+  rewritten_bullets: {
+    before: string;
+    after: string;
+    reasons: string[];
+    job_relevance: string;
+  }[];
 };
 
 const schema = {
