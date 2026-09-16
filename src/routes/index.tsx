@@ -641,24 +641,12 @@ function Index() {
                 icon={<ListChecks className="h-4 w-4" />}
                 title="Job requirements vs resume evidence"
               >
-                <div className="space-y-2.5">
+                <p className="-mt-2 mb-3 text-xs text-muted-foreground">
+                  Tap a requirement to see the resume evidence and why it was classified this way.
+                </p>
+                <div className="space-y-2">
                   {reqs.map((r, i) => (
-                    <div
-                      key={i}
-                      className="grid gap-2 rounded-lg border border-border bg-muted/40 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_auto] sm:items-center sm:gap-4"
-                    >
-                      <p className="text-sm font-semibold">{r.requirement}</p>
-                      <p
-                        className={`text-sm ${
-                          r.status === "Missing"
-                            ? "text-muted-foreground italic"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {r.status === "Missing" ? r.evidence : `“${r.evidence}”`}
-                      </p>
-                      <StatusChip status={r.status} />
-                    </div>
+                    <RequirementCard key={i} req={r} />
                   ))}
                 </div>
               </Section>
