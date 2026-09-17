@@ -20,6 +20,22 @@ Instead of relying only on keyword matching, ResumeRoast maps job requirements t
 - No-JD Resume Analysis
 - Application Tracker
 
+## Job Matching Examples
+
+ResumeRoast compares each job requirement against evidence found in the resume, then classifies it as **Strong**, **Partial**, or **Missing**.
+
+### Strong Match — 93% Job Match
+
+The resume provides strong evidence for most of the role's requirements, with only limited partial matches and no missing requirements in this analysis.
+
+### Partial Match — 61% Job Match
+
+The resume demonstrates relevant experience for several requirements, while other requirements have only partial evidence or no supporting evidence in the resume.
+
+### Mismatch — 5% Job Match
+
+The resume provides little evidence for the target role's requirements, so most requirements are classified as Missing rather than being inferred from unrelated experience.
+
 ## Requirement → Evidence Matching
 
 ResumeRoast compares individual job requirements against evidence found in the resume.
