@@ -26,13 +26,19 @@ ResumeRoast compares each job requirement against evidence found in the resume, 
 
 ### Strong Match — 93% Job Match
 
+![Strong Match — 93% Job Match](Strong-match.png)
+
 The resume provides strong evidence for most of the role's requirements, with only limited partial matches and no missing requirements in this analysis.
 
 ### Partial Match — 61% Job Match
 
+![Partial Match — 61% Job Match](Partial-match.png)
+
 The resume demonstrates relevant experience for several requirements, while other requirements have only partial evidence or no supporting evidence in the resume.
 
 ### Mismatch — 5% Job Match
+
+![Mismatch — 5% Job Match](Mismatch.png)
 
 The resume provides little evidence for the target role's requirements, so most requirements are classified as Missing rather than being inferred from unrelated experience.
 
