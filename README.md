@@ -1,29 +1,86 @@
-# Welcome to your Lovable project
+# ResumeRoast
 
-This project was built with [Lovable](https://lovable.dev).
+> Get your resume roasted, then fixed.
 
-## Build with Lovable
+ResumeRoast is an AI-powered resume analysis and job-matching platform that evaluates how well a resume proves its qualifications for a specific job.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Instead of relying only on keyword matching, ResumeRoast maps job requirements to evidence found in the resume and identifies Strong, Partial, and Missing evidence.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Features
 
-## Development
+- AI Resume Analysis
+- ATS Analysis
+- Job Match Score
+- Requirement → Resume Evidence Matching
+- Strong / Partial / Missing requirement classification
+- Missing Requirements analysis
+- Resume bullet improvements
+- "Why this is better" explanations
+- AI Safety Check
+- No-JD Resume Analysis
+- Application Tracker
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Requirement → Evidence Matching
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+ResumeRoast compares individual job requirements against evidence found in the resume.
+
+Each requirement is classified as:
+
+- 🟢 **Strong** — clear supporting evidence exists
+- 🟡 **Partial** — some relevant evidence exists but it is incomplete or indirect
+- 🔴 **Missing** — no supporting evidence was found in the provided resume
+
+**Important:** "Missing" means no evidence was found in the resume. It does not automatically mean the candidate does not have the skill.
+
+## Evidence-Based Job Matching
+
+The Job Match score considers factors such as:
+
+- Skills Match
+- Experience Relevance
+- Education
+- Evidence Strength
+- Job-specific keywords
+- Resume clarity
+
+The goal is to distinguish meaningful evidence from simple keyword overlap.
+
+## AI Safety
+
+ResumeRoast is designed to avoid fabricating candidate qualifications.
+
+The system should never invent:
+
+- Skills
+- Programming languages
+- Projects
+- APIs
+- Metrics
+- Technical achievements
+- Work experience
+- Tools or technologies
+
+When evidence is unavailable, the system should explicitly communicate that no evidence was found in the provided resume.
+
+## No-JD Mode
+
+Users can analyze their resume even when they do not have a specific job description.
+
+## Application Tracker
+
+ResumeRoast includes an application tracking workflow for organizing job applications.
+
+## Tech Stack
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Lovable
+
+## Local Development
+
+```bash
+npm install
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
